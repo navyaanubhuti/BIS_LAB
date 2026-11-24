@@ -1,0 +1,77 @@
+import random
+
+subjects = ["Maths", "Physics", "Chemistry", "English"]
+
+students = [[0, 1], [1, 2], [2, 3], [0, 3]]
+
+slots = 3
+number_of_wolves = 10
+iterations = 50
+
+
+def fitness(wolf):
+    clashes = 0
+
+    for exams in students:
+        for i in range(len(exams)):
+            for j in range(i + 1, len(exams)):
+                if wolf[exams[i]] == wolf[exams[j]]:
+                    clashes += 1
+
+    return clashes
+
+
+def update(leader, current, a):
+    r1 = random.random()
+    r2 = random.random()
+
+    A = 2 * a * r1 - a
+    C = 2 * r2
+    D = abs(C * leader - current)
+
+    return leader - A * D
+
+wolves = []
+
+for i in range(number_of_wolves):
+    wolf = []
+
+    for j in range(len(subjects)):
+        wolf.append(random.randint(0, slots - 1))
+
+    wolves.append(wolf)
+
+
+for t in range(iterations):
+    wolves.sort(key=fitness)
+
+    alpha = wolves[0][:]
+    beta = wolves[1][:]
+    delta = wolves[2][:]
+
+    a = 2 * (1 - t / (iterations - 1))
+
+    for i in range(3, number_of_wolves):
+        for j in range(len(subjects)):
+            current = wolves[i][j]
+
+            x1 = update(alpha[j], current, a)
+            x2 = update(beta[j], current, a)
+            x3 = update(delta[j], current, a)
+
+            position = (x1 + x2 + x3) / 3
+
+            slot = round(position)
+            slot = max(0, min(slots - 1, slot))
+
+            wolves[i][j] = slot
+
+
+best = min(wolves, key=fitness)
+
+print("Best timetable:")
+
+for i in range(len(subjects)):
+    print(subjects[i], "-> Slot", best[i] + 1)
+
+print("Clashes:", fitness(best))
