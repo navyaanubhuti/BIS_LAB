@@ -1,0 +1,79 @@
+import random
+import math
+
+N = 30
+
+random.seed(10)
+locations = [(0, 0)] + [
+    (random.randint(1, 100), random.randint(1, 100)) for _ in range(N)
+]
+
+def distance(a, b):
+    x = locations[a][0] - locations[b][0]
+    y = locations[a][1] - locations[b][1]
+    return math.sqrt(x*x + y*y)
+
+def total_cost(route):
+    cost = 0
+    for i in range(len(route) - 1):
+        cost += distance(route[i], route[i+1])
+    cost += distance(route[-1], route[0])
+    return cost
+
+def fitness(route):
+    return 1 / total_cost(route)
+
+def create_population(size):
+    population = []
+    for _ in range(size):
+        route = list(range(1, N+1))
+        random.shuffle(route)
+        population.append(route)
+    return population
+
+def selection(population):
+    candidates = random.sample(population, 3)
+    return min(candidates, key=total_cost)
+
+def crossover(parent1, parent2):
+    start, end = sorted(random.sample(range(N), 2))
+    child = [None] * N
+    child[start:end] = parent1[start:end]
+    
+    remaining = [x for x in parent2 if x not in child]
+    j = 0
+    for i in range(N):
+        if child[i] is None:
+            child[i] = remaining[j]
+            j += 1
+    return child
+
+def mutation(route):
+    if random.random() < 0.1:
+        i, j = random.sample(range(N), 2)
+        route[i], route[j] = route[j], route[i]
+    return route
+
+def genetic_algorithm():
+    population = create_population(100)
+    
+    for generation in range(500):
+        population.sort(key=total_cost)
+        new_population = [population[0]] 
+        while len(new_population) < 100:
+            p1 = selection(population)
+            p2 = selection(population)
+            child = crossover(p1, p2)
+            child = mutation(child)
+            new_population.append(child)
+            
+        population = new_population
+        
+    best_route = min(population, key=total_cost)
+    return best_route, total_cost(best_route)
+
+route, cost = genetic_algorithm()
+
+print(f"Best Route: {[0] + route + [0]}")
+print(f"Minimum Distance: {round(cost, 2)}")
+print(f"Fitness Value: {round(1/cost, 6)}")
