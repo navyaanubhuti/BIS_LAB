@@ -1,0 +1,50 @@
+import random
+
+def fitness(x, y):
+    return x**2 + y**2
+
+N = 30
+iterations = 50
+w = 0.7
+c1 = 1.5
+c2 = 1.5
+
+particles = []
+
+for i in range(N):
+    x = random.uniform(-10, 10)
+    y = random.uniform(-10, 10)
+    
+    vx = random.uniform(-1, 1)
+    vy = random.uniform(-1, 1)
+    
+    particles.append([x, y, vx, vy, x, y])
+
+gbest = min(particles, key=lambda p: fitness(p[0], p[1]))[:2]
+
+for t in range(iterations):
+    for p in particles:
+        x, y, vx, vy, px, py = p
+        
+        r1 = random.random()
+        r2 = random.random()
+        
+        vx = w * vx + c1 * r1 * (px - x) + c2 * r2 * (gbest[0] - x)
+        vy = w * vy + c1 * r1 * (py - y) + c2 * r2 * (gbest[1] - y)
+        
+        x = max(-10, min(10, x + vx))
+        y = max(-10, min(10, y + vy))
+        
+        if fitness(x, y) < fitness(px, py):
+            px, py = x, y
+            
+        p[:] = [x, y, vx, vy, px, py]
+        
+    best = min(particles, key=lambda p: fitness(p[4], p[5]))
+    
+    if fitness(best[4], best[5]) < fitness(*gbest):
+        gbest = best[4:6]
+
+print(f"Best X: {gbest[0]:.6f}")
+print(f"Best Y: {gbest[1]:.6f}")
+print(f"Minimum Value: {fitness(*gbest):.6f}")
